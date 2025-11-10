@@ -6,6 +6,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
+from typing import Dict
+from scipy import stats  # For returns distribution
 
 class Visualizer:
     """Create interactive performance visualizations using Plotly"""
