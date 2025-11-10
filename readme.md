@@ -88,7 +88,7 @@ python main.py --start-date 2020-01-01 --target-vol 0.20 --tickers SPY QQQ AAPL
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/momentum-strategy.git
+git clone https://github.com/sh-mukherjee/momentum-strategy.git
 cd momentum-strategy
 ```
 
@@ -473,9 +473,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-**Your Name** - [@yourtwitter](https://twitter.com/yourtwitter) - your.email@example.com
+**Shantala Mukherjee**  [LinkedIn](https://www.linkedin.com/in/shantalamukherjee/)- [@sh_mukherjee](https://x.com/sh_mukherjee)
 
-Project Link: [https://github.com/yourusername/momentum-strategy](https://github.com/yourusername/momentum-strategy)
+Project Link: [https://github.com/sh-mukherjee/momentum-strategy](https://github.com/sh-mukherjee/momentum-strategy)
 
 ---
 
