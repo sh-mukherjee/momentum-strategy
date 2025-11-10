@@ -56,7 +56,7 @@ A comprehensive quantitative trading system implementing momentum strategies acr
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/momentum-strategy.git
+git clone https://github.com/sh-mukherjee/momentum-strategy.git
 cd momentum-strategy
 
 # Install dependencies
