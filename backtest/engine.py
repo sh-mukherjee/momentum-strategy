@@ -2,6 +2,7 @@
 Backtesting engine
 """
 import pandas as pd
+import numpy as np
 from typing import Dict
 
 class Backtester:
