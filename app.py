@@ -1,6 +1,7 @@
 """
 Interactive Multi-Asset Momentum Strategy with Streamlit
 =========================================================
+Complete, corrected version with all features enabled
 Run with: streamlit run app.py
 """
 
@@ -17,7 +18,7 @@ from signals import MomentumSignals
 from risk import RiskManager
 from backtest import Backtester
 from visualization import Visualizer
-from simulation.monte_carlo import MonteCarloSimulator, print_simulation_summary
+from simulation.monte_carlo import MonteCarloSimulator
 from analysis.factor_exposure import FactorAnalyzer
 from analysis.transaction_costs import TransactionCostAnalyzer
 
@@ -167,6 +168,13 @@ if run_monte_carlo:
         "Paths to Display",
         10, 500, 100, 10
     )
+
+# Advanced Analysis - ENABLED BY DEFAULT
+st.sidebar.markdown("---")
+st.sidebar.subheader("📊 Advanced Analysis")
+
+run_factor_analysis = st.sidebar.checkbox("Factor Exposure Analysis", value=True)
+run_cost_analysis = st.sidebar.checkbox("Transaction Cost Analysis", value=True)
 
 # ============================================================================
 # RUN BACKTEST BUTTON
@@ -331,8 +339,11 @@ if run_button:
             fig6 = Visualizer.plot_returns_distribution(returns)
             st.plotly_chart(fig6, use_container_width=True)
         
-        # Monte Carlo Simulation Section
+        # ====================================================================
+        # MONTE CARLO SIMULATION SECTION
+        # ====================================================================
         if run_monte_carlo:
+            st.markdown("---")
             st.header("🎲 Monte Carlo Risk Assessment")
             
             st.info("Running Monte Carlo simulation to project future portfolio outcomes...")
@@ -511,15 +522,213 @@ if run_button:
                 
                 st.dataframe(pd.DataFrame(metrics_data), use_container_width=True)
         
-        # Detailed metrics table
-        with st.expander("📋 Detailed Metrics Table"):
-            metrics_df = pd.DataFrame({
-                'Metric': list(strategy_metrics.keys()),
-                'Value': list(strategy_metrics.values())
-            })
-            st.dataframe(metrics_df, use_container_width=True)
+        # ====================================================================
+        # FACTOR ANALYSIS SECTION
+        # ====================================================================
+        if run_factor_analysis:
+            st.markdown("---")
+            st.header("📊 Factor Exposure Analysis")
+            
+            with st.spinner("Running factor analysis..."):
+                try:
+                    # Initialize factor analyzer
+                    factor_analyzer = FactorAnalyzer(returns)
+                    
+                    # Model selection
+                    factor_model = st.selectbox(
+                        "Select Factor Model",
+                        ['Carhart 4-Factor', 'Fama-French 3-Factor', 'Fama-French 5-Factor'],
+                        index=0
+                    )
+                    
+                    # Run analysis based on selection
+                    if factor_model == 'Fama-French 3-Factor':
+                        factor_results = factor_analyzer.fama_french_3factor()
+                        model_desc = "Market, Size (SMB), Value (HML)"
+                    elif factor_model == 'Carhart 4-Factor':
+                        factor_results = factor_analyzer.carhart_4factor()
+                        model_desc = "Market, Size (SMB), Value (HML), Momentum"
+                    else:  # FF5
+                        factor_results = factor_analyzer.fama_french_5factor()
+                        model_desc = "Market, Size, Value, Profitability (RMW), Investment (CMA)"
+                    
+                    st.info(f"**Model**: {model_desc}")
+                    
+                    # Key metrics
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("R-Squared", f"{factor_results.r_squared:.3f}")
+                    col2.metric("Alpha (Annual)", f"{factor_results.alpha:.2%}")
+                    col3.metric("Model Fit", 
+                               "Strong" if factor_results.r_squared > 0.7 
+                               else "Moderate" if factor_results.r_squared > 0.5 
+                               else "Weak")
+                    
+                    # Factor loadings chart
+                    st.subheader("Factor Loadings (Betas)")
+                    fig_loadings = Visualizer.plot_factor_loadings(factor_results)
+                    st.plotly_chart(fig_loadings, use_container_width=True)
+                    
+                    # Attribution chart
+                    st.subheader("Return Attribution")
+                    fig_attribution = Visualizer.plot_factor_attribution(factor_results)
+                    st.plotly_chart(fig_attribution, use_container_width=True)
+                    
+                    # Interpretation guide
+                    with st.expander("📖 How to Interpret Factor Loadings"):
+                        st.markdown("""
+                        **Factor loadings (betas) show your strategy's exposures:**
+                        
+                        - **Mkt-RF (Market)**: Beta to market excess returns
+                          - β > 1.0: More volatile than market (aggressive)
+                          - β < 1.0: Less volatile (defensive)
+                          - β ≈ 0: Market neutral
+                        
+                        - **SMB (Size)**: Small vs Large cap exposure
+                          - Positive: Small cap tilt
+                          - Negative: Large cap tilt
+                        
+                        - **HML (Value)**: Value vs Growth exposure
+                          - Positive: Value tilt
+                          - Negative: Growth tilt
+                        
+                        - **Mom (Momentum)**: Momentum exposure
+                          - Positive: Buys winners, sells losers
+                          - Negative: Contrarian (buys losers)
+                        
+                        **Alpha**: Excess return not explained by factors (skill-based return)
+                        
+                        **R²**: % of returns explained by the model (higher = better fit)
+                        """)
+                    
+                    # Rolling factor exposures
+                    if st.checkbox("Show Time-Varying Factor Exposures"):
+                        st.subheader("Rolling Factor Loadings")
+                        
+                        with st.spinner("Computing rolling 1-year factor exposures..."):
+                            factor_data = factor_analyzer.fetch_factor_data(
+                                ['Mkt-RF', 'SMB', 'HML', 'Mom', 'RF'] if factor_model == 'Carhart 4-Factor' 
+                                else ['Mkt-RF', 'SMB', 'HML', 'RF']
+                            )
+                            rolling_betas = factor_analyzer.rolling_factor_loadings(factor_data, window=252)
+                            
+                            fig_rolling = Visualizer.plot_rolling_factor_loadings(rolling_betas)
+                            st.plotly_chart(fig_rolling, use_container_width=True)
+                    
+                    # Style analysis
+                    st.subheader("Investment Style Analysis")
+                    style = factor_analyzer.style_analysis()
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Market Beta", f"{style['Market Beta']:.3f}")
+                        st.metric("Size Tilt (SMB)", f"{style['Size Tilt']:.3f}")
+                        st.metric("Value Tilt (HML)", f"{style['Value Tilt']:.3f}")
+                    with col2:
+                        st.metric("Momentum Exposure", f"{style['Momentum Exposure']:.3f}")
+                        st.info(f"**Style Classification:**\n\n{style['Style']}")
+                
+                except Exception as e:
+                    st.error(f"❌ Error in factor analysis: {str(e)}")
+                    st.exception(e)
         
-        # Download results
+        # ====================================================================
+        # TRANSACTION COST ANALYSIS SECTION
+        # ====================================================================
+        if run_cost_analysis:
+            st.markdown("---")
+            st.header("💰 Transaction Cost Sensitivity Analysis")
+            
+            with st.spinner("Analyzing transaction costs..."):
+                try:
+                    # Initialize cost analyzer
+                    cost_analyzer = TransactionCostAnalyzer(positions, prices, base_cost=transaction_cost)
+                    
+                    # Run sensitivity analysis
+                    cost_results = cost_analyzer.sensitivity_analysis(
+                        cost_levels=[i * 0.0005 for i in range(21)]  # 0 to 50 bps
+                    )
+                    
+                    # Key metrics
+                    st.subheader("Turnover Statistics")
+                    col1, col2, col3, col4 = st.columns(4)
+                    
+                    turnover_stats = cost_results.turnover_analysis.iloc[0]
+                    col1.metric("Annual Turnover", f"{turnover_stats['Annualized Turnover']:.2f}")
+                    col2.metric("Avg Daily Turnover", f"{turnover_stats['Average Daily Turnover']:.4f}")
+                    col3.metric("Trading Frequency", f"{turnover_stats['Trading Frequency']:.2%}")
+                    col4.metric("Breakeven Cost", f"{cost_results.breakeven_cost*10000:.1f} bps")
+                    
+                    # Cost sensitivity chart
+                    st.subheader("Performance vs Transaction Costs")
+                    fig_sensitivity = Visualizer.plot_cost_sensitivity(cost_results.cost_scenarios)
+                    st.plotly_chart(fig_sensitivity, use_container_width=True)
+                    
+                    # Costs over time
+                    st.subheader("Transaction Costs Over Time")
+                    fig_turnover = Visualizer.plot_turnover_over_time(cost_results.cost_impact)
+                    st.plotly_chart(fig_turnover, use_container_width=True)
+                    
+                    # Detailed analysis tabs
+                    st.subheader("Detailed Cost Analysis")
+                    cost_tab1, cost_tab2, cost_tab3 = st.tabs([
+                        "Rebalancing Frequency", 
+                        "Cost by Asset", 
+                        "Slippage Impact"
+                    ])
+                    
+                    with cost_tab1:
+                        st.markdown("### Optimal Rebalancing Frequency")
+                        st.info("Testing different rebalancing frequencies to balance costs vs tracking error...")
+                        
+                        rebal_df = cost_analyzer.optimal_rebalancing_frequency(
+                            frequencies=[1, 5, 10, 20, 40, 60]
+                        )
+                        
+                        fig_rebal = Visualizer.plot_rebalancing_frequency_analysis(rebal_df)
+                        st.plotly_chart(fig_rebal, use_container_width=True)
+                        
+                        st.dataframe(breakdown, use_container_width=True)
+                    
+                    with cost_tab3:
+                        st.markdown("### Market Impact & Slippage Analysis")
+                        st.info("Estimating impact of market impact costs beyond fixed transaction fees...")
+                        
+                        slippage_df = cost_analyzer.slippage_impact_analysis(
+                            slippage_levels=[0, 0.5, 1.0, 1.5, 2.0]
+                        )
+                        
+                        st.dataframe(slippage_df, use_container_width=True)
+                        
+                        st.warning("""
+                        **Note**: Market impact typically increases with trade size. Larger position changes 
+                        experience more slippage. This analysis shows how returns degrade with increasing 
+                        market impact costs.
+                        """)
+                    
+                    # Cost efficiency threshold
+                    with st.expander("🔍 Minimum Trade Threshold Analysis"):
+                        st.markdown("### Impact of Trade Size Thresholds")
+                        st.info("Testing minimum position change thresholds to reduce unnecessary rebalancing...")
+                        
+                        threshold_df = cost_analyzer.cost_efficient_threshold(
+                            threshold_values=[0, 0.01, 0.02, 0.05, 0.10]
+                        )
+                        
+                        st.dataframe(threshold_df, use_container_width=True)
+                        
+                        # Find optimal threshold
+                        optimal_idx = threshold_df['Annual_Return'].idxmax()
+                        optimal_threshold = threshold_df.loc[optimal_idx, 'Threshold_Pct']
+                        st.success(f"💡 **Optimal Threshold**: {optimal_threshold:.1f}% minimizes costs while maintaining returns")
+                
+                except Exception as e:
+                    st.error(f"❌ Error in transaction cost analysis: {str(e)}")
+                    st.exception(e)
+        
+        # ====================================================================
+        # DOWNLOAD RESULTS SECTION
+        # ====================================================================
+        st.markdown("---")
         st.header("💾 Download Results")
         
         col1, col2 = st.columns(2)
@@ -559,7 +768,8 @@ else:
     2. **Select Assets**: Pick from equities, FX pairs, and futures
     3. **Configure Momentum**: Adjust lookback periods for signal generation
     4. **Set Risk Parameters**: Define target volatility and position sizing
-    5. **Run Backtest**: Click the button to see results
+    5. **Enable Advanced Analysis**: Toggle Monte Carlo, Factor Analysis, Transaction Costs
+    6. **Run Backtest**: Click the button to see results
     
     ### 📊 Strategy Overview
     
@@ -568,18 +778,102 @@ else:
     - **Cross-Sectional Momentum**: Ranks assets relative to each other
     - **Volatility-Based Position Sizing**: Allocates more to lower volatility assets
     - **Transaction Cost Modeling**: Realistic cost assumptions
+    
+    ### 🎯 Advanced Features
+    
+    - **Monte Carlo Simulation**: Project 10,000+ scenarios for risk assessment
+    - **Factor Exposure Analysis**: Understand return drivers (Fama-French models)
+    - **Transaction Cost Analysis**: Optimize rebalancing frequency and minimize costs
     """)
     
     # Show example configuration
-    with st.expander("💡 Example Configuration"):
+    with st.expander("💡 Example Configurations"):
         st.markdown("""
         **Conservative Portfolio:**
         - Assets: SPY, AGG, GLD
         - Target Vol: 10%
         - Lookbacks: 60/120/180
+        - Transaction Cost: 5 bps
+        
+        **Balanced Portfolio:**
+        - Assets: SPY, QQQ, IWM, EFA, AGG, GLD
+        - Target Vol: 15%
+        - Lookbacks: 20/60/120
+        - Transaction Cost: 10 bps
         
         **Aggressive Portfolio:**
         - Assets: QQQ, EEM, GC=F, CL=F
         - Target Vol: 20%
         - Lookbacks: 20/40/60
+        - Transaction Cost: 15 bps
+        
+        **Multi-Asset Diversified:**
+        - Assets: All available (Equities + FX + Futures)
+        - Target Vol: 15%
+        - Lookbacks: 20/60/120
+        - Transaction Cost: 10 bps
         """)
+    
+    # Show key metrics explanation
+    with st.expander("📚 Understanding Key Metrics"):
+        st.markdown("""
+        ### Performance Metrics
+        
+        - **Total Return**: Cumulative return over the entire backtest period
+        - **Annual Return**: Annualized rate of return
+        - **Sharpe Ratio**: Risk-adjusted return (return per unit of volatility)
+        - **Annual Volatility**: Standard deviation of returns (annualized)
+        - **Max Drawdown**: Largest peak-to-trough decline
+        
+        ### Factor Analysis
+        
+        - **Alpha**: Excess return not explained by factor exposures (skill)
+        - **Beta**: Sensitivity to market movements
+        - **R-Squared**: % of returns explained by the factor model
+        - **Factor Loadings**: Exposure to different risk factors
+        
+        ### Transaction Costs
+        
+        - **Turnover**: How frequently the portfolio is rebalanced
+        - **Breakeven Cost**: Maximum cost the strategy can tolerate
+        - **Cost Sensitivity**: How performance changes with different cost levels
+        - **Optimal Rebalancing**: Best frequency to balance costs vs performance
+        
+        ### Monte Carlo Simulation
+        
+        - **VaR (Value at Risk)**: Maximum expected loss at given confidence
+        - **CVaR (Conditional VaR)**: Average loss beyond VaR threshold
+        - **Probability Analysis**: Likelihood of different outcomes
+        - **Percentiles**: Range of possible final values
+        """)
+    
+    # Contact and support
+    st.markdown("---")
+    st.markdown("""
+    ### 📧 Support
+    
+    For questions, issues, or feature requests:
+    - Visit the [GitHub Repository](https://github.com/yourusername/momentum-strategy)
+    - Report bugs in [Issues](https://github.com/yourusername/momentum-strategy/issues)
+    - Read the [Documentation](https://github.com/yourusername/momentum-strategy/blob/main/README.md)
+    
+    ### ⚠️ Disclaimer
+    
+    This software is for educational and research purposes only. Not financial advice.
+    Past performance does not guarantee future results. Trading involves risk of loss.
+    """)
+frame(rebal_df, use_container_width=True)
+                        
+                        # Recommendation
+                        best_freq = rebal_df.loc[rebal_df['Sharpe_Ratio'].idxmax(), 'Rebalance_Frequency']
+                        st.success(f"💡 **Recommendation**: Based on Sharpe ratio, optimal frequency is **{best_freq}**")
+                    
+                    with cost_tab2:
+                        st.markdown("### Transaction Costs by Asset")
+                        
+                        breakdown = cost_analyzer.cost_breakdown_by_asset()
+                        
+                        fig_breakdown = Visualizer.plot_cost_breakdown_by_asset(breakdown, top_n=10)
+                        st.plotly_chart(fig_breakdown, use_container_width=True)
+                        
+                        st.data
