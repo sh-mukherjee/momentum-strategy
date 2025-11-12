@@ -103,7 +103,7 @@ st.sidebar.subheader("📊 Momentum Parameters")
 
 # Lookback periods
 st.sidebar.markdown("**Time-Series Momentum Lookbacks (days)**")
-lookback_short = st.sidebar.slider("Short-term", 5, 50, 20, 5)
+lookback_short = st.sidebar.slider("Short-term", 5, 60, 20, 5)
 lookback_medium = st.sidebar.slider("Medium-term", 30, 120, 60, 10)
 lookback_long = st.sidebar.slider("Long-term", 60, 252, 120, 20)
 
@@ -169,12 +169,12 @@ if run_monte_carlo:
         10, 500, 100, 10
     )
 
-# Advanced Analysis - ENABLED BY DEFAULT
+# Advanced Analysis - DISABLED BY DEFAULT
 st.sidebar.markdown("---")
 st.sidebar.subheader("📊 Advanced Analysis")
 
-run_factor_analysis = st.sidebar.checkbox("Factor Exposure Analysis", value=True)
-run_cost_analysis = st.sidebar.checkbox("Transaction Cost Analysis", value=True)
+run_factor_analysis = st.sidebar.checkbox("Factor Exposure Analysis", value=False)
+run_cost_analysis = st.sidebar.checkbox("Transaction Cost Analysis", value=False)
 
 # ============================================================================
 # RUN BACKTEST BUTTON
@@ -868,9 +868,9 @@ else:
     ### 📧 Support
     
     For questions, issues, or feature requests:
-    - Visit the [GitHub Repository](https://github.com/yourusername/momentum-strategy)
-    - Report bugs in [Issues](https://github.com/yourusername/momentum-strategy/issues)
-    - Read the [Documentation](https://github.com/yourusername/momentum-strategy/blob/main/README.md)
+    - Visit the [GitHub Repository](https://github.com/sh-mukherjee/momentum-strategy)
+    - Report bugs in [Issues](https://github.com/sh-mukherjee/momentum-strategy/issues)
+    - Read the [Documentation](https://github.com/sh-mukherjee/momentum-strategy/blob/main/README.md)
     
     ### ⚠️ Disclaimer
     
