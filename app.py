@@ -687,8 +687,23 @@ if run_button:
                         fig_rebal = Visualizer.plot_rebalancing_frequency_analysis(rebal_df)
                         st.plotly_chart(fig_rebal, use_container_width=True)
                         
+                        st.dataframe(rebal_df, use_container_width=True)
+                        
+                        # Recommendation
+                        best_freq = rebal_df.loc[rebal_df['Sharpe_Ratio'].idxmax(), 'Rebalance_Frequency']
+                        st.success(f"💡 **Recommendation**: Based on Sharpe ratio, optimal frequency is **{best_freq}**")
+
+                    with cost_tab2:
+                        st.markdown("### Transaction Costs by Asset")
+                        
+                        breakdown = cost_analyzer.cost_breakdown_by_asset()
+                        
+
+                        fig_breakdown = Visualizer.plot_cost_breakdown_by_asset(breakdown, top_n=10)
+                        st.plotly_chart(fig_breakdown, use_container_width=True)
+                        
                         st.dataframe(breakdown, use_container_width=True)
-                    
+
                     with cost_tab3:
                         st.markdown("### Market Impact & Slippage Analysis")
                         st.info("Estimating impact of market impact costs beyond fixed transaction fees...")
@@ -862,18 +877,8 @@ else:
     This software is for educational and research purposes only. Not financial advice.
     Past performance does not guarantee future results. Trading involves risk of loss.
     """)
-frame(rebal_df, use_container_width=True)
-                        
-                        # Recommendation
-                        best_freq = rebal_df.loc[rebal_df['Sharpe_Ratio'].idxmax(), 'Rebalance_Frequency']
-                        st.success(f"💡 **Recommendation**: Based on Sharpe ratio, optimal frequency is **{best_freq}**")
+    
                     
-                    with cost_tab2:
-                        st.markdown("### Transaction Costs by Asset")
+                    
                         
-                        breakdown = cost_analyzer.cost_breakdown_by_asset()
                         
-                        fig_breakdown = Visualizer.plot_cost_breakdown_by_asset(breakdown, top_n=10)
-                        st.plotly_chart(fig_breakdown, use_container_width=True)
-                        
-                        st.data
