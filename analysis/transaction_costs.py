@@ -1,5 +1,5 @@
 """
-analysis/transaction_costs.py - Transaction cost sensitivity analysis
+analysis/transaction_costs.py - Transaction cost sensitivity analysis (FIXED)
 """
 import numpy as np
 import pandas as pd
@@ -9,24 +9,15 @@ from dataclasses import dataclass
 @dataclass
 class TransactionCostResults:
     """Container for transaction cost analysis results"""
-    cost_scenarios: pd.DataFrame  # Performance across cost levels
-    breakeven_cost: float  # Maximum cost before returns turn negative
-    turnover_analysis: pd.DataFrame  # Turnover statistics
-    cost_impact: pd.DataFrame  # Cost impact by time period
-    optimal_rebalance_freq: Dict  # Optimal rebalancing frequency
+    cost_scenarios: pd.DataFrame
+    breakeven_cost: float
+    turnover_analysis: pd.DataFrame
+    cost_impact: pd.DataFrame
+    optimal_rebalance_freq: Dict
 
 
 class TransactionCostAnalyzer:
-    """
-    Analyze impact of transaction costs on strategy performance
-    
-    Features:
-    - Sensitivity analysis across cost levels
-    - Turnover analysis
-    - Optimal rebalancing frequency
-    - Cost breakdown by asset
-    - Slippage impact assessment
-    """
+    """Analyze impact of transaction costs on strategy performance"""
     
     def __init__(self, 
                  positions: pd.DataFrame,
@@ -47,12 +38,8 @@ class TransactionCostAnalyzer:
         # Calculate returns
         self.asset_returns = prices.pct_change()
     
-    def calculate_turnover(self) -> pd.DataFrame:
-        """
-        Calculate portfolio turnover metrics
-        
-        Turnover = sum of absolute position changes
-        """
+    def calculate_turnover(self) -> Tuple[pd.DataFrame, Dict]:
+        """Calculate portfolio turnover metrics"""
         # Position changes
         position_changes = self.positions.diff().abs()
         
@@ -83,14 +70,8 @@ class TransactionCostAnalyzer:
     
     def sensitivity_analysis(self, 
                             cost_levels: List[float] = None) -> TransactionCostResults:
-        """
-        Test strategy performance across different transaction cost levels
-        
-        Args:
-            cost_levels: List of cost levels to test (in decimal, e.g., 0.001 = 10 bps)
-        """
+        """Test strategy performance across different transaction cost levels"""
         if cost_levels is None:
-            # Default: 0 to 50 bps in 5 bp increments
             cost_levels = [i * 0.0005 for i in range(21)]
         
         results = []
@@ -127,7 +108,7 @@ class TransactionCostAnalyzer:
         
         cost_scenarios = pd.DataFrame(results)
         
-        # Find breakeven cost (where returns turn negative)
+        # Find breakeven cost
         breakeven = cost_scenarios[cost_scenarios['Total_Return'] > 0]['Cost_BPS'].max() if any(cost_scenarios['Total_Return'] > 0) else 0
         
         # Turnover analysis
@@ -136,38 +117,40 @@ class TransactionCostAnalyzer:
         # Cost impact over time
         position_changes = self.positions.diff().abs()
         cost_impact = pd.DataFrame({
-            'Period': self.positions.index,
             'Costs_Paid': (position_changes * self.base_cost).sum(axis=1),
             'Cumulative_Costs': (position_changes * self.base_cost).sum(axis=1).cumsum()
-        }).set_index('Period')
+        }, index=self.positions.index)
         
         return TransactionCostResults(
             cost_scenarios=cost_scenarios,
-            breakeven_cost=breakeven / 10000,  # Convert to decimal
+            breakeven_cost=breakeven / 10000,
             turnover_analysis=pd.DataFrame([turnover_stats]),
             cost_impact=cost_impact,
-            optimal_rebalance_freq={}  # To be filled by optimization
+            optimal_rebalance_freq={}
         )
     
     def optimal_rebalancing_frequency(self,
                                      frequencies: List[int] = None) -> pd.DataFrame:
-        """
-        Find optimal rebalancing frequency to balance costs and tracking error
-        
-        Args:
-            frequencies: List of rebalancing periods (in days) to test
-        """
+        """Find optimal rebalancing frequency to balance costs and tracking error"""
         if frequencies is None:
-            frequencies = [1, 5, 10, 20, 40, 60]  # Daily, weekly, biweekly, monthly, etc.
+            frequencies = [1, 5, 10, 20, 40, 60]
         
         results = []
         
         for freq in frequencies:
-            # Resample positions to this frequency
-            rebalanced_positions = self.positions.iloc[::freq].copy()
+            # Create rebalancing schedule - FIXED: Use integer indices
+            rebalance_indices = list(range(0, len(self.positions), freq))
+            
+            # Create rebalanced positions
+            rebalanced_positions = self.positions.iloc[rebalance_indices].copy()
+            
+            # Forward fill to all dates (maintain position until next rebalance)
             rebalanced_positions = rebalanced_positions.reindex(
                 self.positions.index, method='ffill'
             )
+            
+            # Fill any NaN at the beginning
+            rebalanced_positions = rebalanced_positions.fillna(0)
             
             # Calculate returns
             gross_returns = (rebalanced_positions.shift(1) * self.asset_returns).sum(axis=1)
@@ -203,9 +186,7 @@ class TransactionCostAnalyzer:
         return pd.DataFrame(results)
     
     def cost_breakdown_by_asset(self) -> pd.DataFrame:
-        """
-        Analyze which assets generate most transaction costs
-        """
+        """Analyze which assets generate most transaction costs"""
         position_changes = self.positions.diff().abs()
         
         costs_by_asset = (position_changes * self.base_cost).sum()
@@ -228,17 +209,9 @@ class TransactionCostAnalyzer:
     
     def slippage_impact_analysis(self,
                                 slippage_levels: List[float] = None) -> pd.DataFrame:
-        """
-        Estimate impact of market impact/slippage beyond fixed costs
-        
-        Slippage typically increases with trade size:
-        Slippage = base_slippage + size_factor * trade_size
-        
-        Args:
-            slippage_levels: List of slippage multipliers to test
-        """
+        """Estimate impact of market impact/slippage beyond fixed costs"""
         if slippage_levels is None:
-            slippage_levels = [0, 0.5, 1.0, 1.5, 2.0]  # Multiples of base cost
+            slippage_levels = [0, 0.5, 1.0, 1.5, 2.0]
         
         results = []
         
@@ -246,7 +219,7 @@ class TransactionCostAnalyzer:
             # Calculate variable slippage based on trade size
             position_changes = self.positions.diff().abs()
             
-            # Slippage increases with square root of trade size (market impact model)
+            # Slippage increases with square root of trade size
             slippage_costs = self.base_cost * slip_mult * np.sqrt(position_changes)
             total_slippage = slippage_costs.sum(axis=1)
             
@@ -277,14 +250,9 @@ class TransactionCostAnalyzer:
     
     def cost_efficient_threshold(self,
                                  threshold_values: List[float] = None) -> pd.DataFrame:
-        """
-        Test impact of minimum trade thresholds to reduce unnecessary rebalancing
-        
-        Args:
-            threshold_values: List of minimum position change thresholds
-        """
+        """Test impact of minimum trade thresholds to reduce unnecessary rebalancing"""
         if threshold_values is None:
-            threshold_values = [0, 0.01, 0.02, 0.05, 0.10]  # 0% to 10%
+            threshold_values = [0, 0.01, 0.02, 0.05, 0.10]
         
         results = []
         
@@ -295,10 +263,15 @@ class TransactionCostAnalyzer:
             filtered_changes[position_changes.abs() < threshold] = 0
             
             # Reconstruct positions with threshold
-            filtered_positions = self.positions.iloc[0:1].copy()
+            filtered_positions = self.positions.iloc[[0]].copy()
+            current_pos = filtered_positions.iloc[0].copy()
+            
             for i in range(1, len(self.positions)):
-                new_pos = filtered_positions.iloc[-1] + filtered_changes.iloc[i]
-                filtered_positions = pd.concat([filtered_positions, new_pos.to_frame().T])
+                current_pos = current_pos + filtered_changes.iloc[i]
+                filtered_positions = pd.concat([
+                    filtered_positions,
+                    pd.DataFrame([current_pos], index=[self.positions.index[i]])
+                ])
             
             # Calculate returns
             gross_returns = (filtered_positions.shift(1) * self.asset_returns).sum(axis=1)
@@ -354,7 +327,7 @@ def print_transaction_cost_summary(results: TransactionCostResults):
     print("=" * 70)
 
 
-# Example usage
+# Test function
 if __name__ == "__main__":
     # Generate sample data
     np.random.seed(42)
@@ -380,3 +353,8 @@ if __name__ == "__main__":
     results = analyzer.sensitivity_analysis()
     
     print_transaction_cost_summary(results)
+    
+    # Test rebalancing frequency
+    print("\nTesting rebalancing frequencies...")
+    rebal_results = analyzer.optimal_rebalancing_frequency([1, 5, 10, 20])
+    print(rebal_results)
