@@ -1,12 +1,13 @@
 # 🚀 Multi-Asset Momentum Trading Strategy
 
-A comprehensive quantitative trading system implementing momentum strategies across equities, FX, and futures with advanced risk analytics, Monte Carlo simulation, factor analysis, and transaction cost optimization.
+A comprehensive quantitative trading system implementing momentum strategies across equities, FX, and futures with advanced risk analytics, Monte Carlo simulation, and transaction cost optimization.
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-FF4B4B.svg)](https://streamlit.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-![Strategy Dashboard](https://via.placeholder.com/800x400/1f77b4/ffffff?text=Interactive+Strategy+Dashboard)
+## Streamlit Web App
+![Strategy Dashboard](https://momentum-strategy-analysis.streamlit.app/)
 
 ## 📋 Table of Contents
 
@@ -35,7 +36,6 @@ A comprehensive quantitative trading system implementing momentum strategies acr
 
 ### 📊 Advanced Analytics
 - **📈 Monte Carlo Simulation**: 10,000+ scenario projections with VaR/CVaR
-- **🧬 Factor Exposure Analysis**: Fama-French 3/4/5-factor models
 - **💰 Transaction Cost Sensitivity**: Optimize rebalancing frequency
 - **📉 Performance Attribution**: Understand return drivers
 - **🎲 Risk Assessment**: Comprehensive drawdown and probability analysis
@@ -43,7 +43,7 @@ A comprehensive quantitative trading system implementing momentum strategies acr
 ### 🎨 Interactive Visualization
 - **Plotly Charts**: Fully interactive with zoom, pan, hover tooltips
 - **Real-Time Updates**: Dynamic parameter adjustment
-- **Multiple Views**: Cumulative returns, drawdowns, factor loadings, cost analysis
+- **Multiple Views**: Cumulative returns, drawdowns, cost analysis
 - **Export Ready**: Download results as CSV, charts as PNG/SVG
 
 ### 🌐 Dual Interface
@@ -178,11 +178,6 @@ momentum-strategy/
 - Set number of simulations (1,000 - 50,000)
 - Project forward (30 - 504 days)
 
-**Factor Analysis**
-- Select factor model (FF3, Carhart 4, FF5)
-- View factor loadings and attribution
-- Analyze rolling exposures
-
 **Transaction Cost Analysis**
 - Sensitivity across cost levels
 - Optimal rebalancing frequency
@@ -194,7 +189,6 @@ Click **"🚀 Run Backtest"** and view:
 - Performance metrics
 - Interactive charts
 - Risk analytics
-- Factor exposures
 - Cost analysis
 
 ### Command-Line Interface
@@ -284,29 +278,8 @@ Dynamically adjusts exposure to maintain consistent risk.
 - Parametric (assumes normal distribution)
 - Geometric Brownian Motion (theoretical)
 
-### 2. Factor Exposure Analysis
 
-**What it does**: Decomposes returns into known risk factors
-
-**Fama-French 3-Factor**:
-- **Mkt-RF**: Market excess return
-- **SMB**: Size premium (small cap - large cap)
-- **HML**: Value premium (value - growth)
-
-**Carhart 4-Factor** (adds):
-- **Mom**: Momentum factor
-
-**Fama-French 5-Factor** (adds):
-- **RMW**: Profitability factor
-- **CMA**: Investment factor
-
-**Output**:
-- Factor loadings (betas)
-- Alpha (skill-based return)
-- R² (model fit)
-- Return attribution
-
-### 3. Transaction Cost Sensitivity
+### 2. Transaction Cost Sensitivity
 
 **What it does**: Tests strategy viability under realistic trading costs
 
@@ -318,19 +291,6 @@ Dynamically adjusts exposure to maintain consistent risk.
 - **By Asset**: Which assets are most expensive
 - **Slippage**: Market impact modeling
 
-## 📸 Screenshots
-
-### Main Dashboard
-![Dashboard](https://via.placeholder.com/800x450/2ca02c/ffffff?text=Strategy+Dashboard+with+Performance+Metrics)
-
-### Monte Carlo Simulation
-![Monte Carlo](https://via.placeholder.com/800x450/1f77b4/ffffff?text=10%2C000+Scenario+Projections)
-
-### Factor Analysis
-![Factor Analysis](https://via.placeholder.com/800x450/ff7f0e/ffffff?text=Factor+Loadings+and+Attribution)
-
-### Transaction Costs
-![Cost Analysis](https://via.placeholder.com/800x450/d62728/ffffff?text=Cost+Sensitivity+Dashboard)
 
 ## ⚙️ Configuration
 
@@ -402,11 +362,6 @@ The strategy calculates comprehensive performance metrics:
 - Probability of Profit
 - Expected Shortfall
 
-### Factor Analysis
-- Alpha
-- Factor Loadings (Betas)
-- R-Squared
-- Return Attribution
 
 ### Transaction Costs
 - Total Turnover
@@ -427,7 +382,7 @@ Contributions are welcome! Here's how you can help:
 
 ### Areas for Contribution
 
-- [ ] Add more factor models (custom factors, macro factors)
+- [ ] Add factor models (custom factors, macro factors)
 - [ ] Implement machine learning signals
 - [ ] Add live trading integration (Alpaca, Interactive Brokers)
 - [ ] Enhance visualization (3D plots, animations)
