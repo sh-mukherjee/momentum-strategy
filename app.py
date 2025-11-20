@@ -680,7 +680,7 @@ else:
     2. **Select Assets**: Pick from equities, FX pairs, and futures
     3. **Configure Momentum**: Adjust lookback periods for signal generation
     4. **Set Risk Parameters**: Define target volatility and position sizing
-    5. **Enable Advanced Analysis**: Toggle Monte Carlo, Factor Analysis, Transaction Costs
+    5. **Enable Advanced Analysis**: Toggle Monte Carlo, Transaction Costs
     6. **Run Backtest**: Click the button to see results
     
     ### 📊 Strategy Overview
