@@ -530,112 +530,112 @@ if run_button:
         # ====================================================================
         # TRANSACTION COST ANALYSIS SECTION
         # ====================================================================
-         if run_cost_analysis:
-             st.markdown("---")
-             st.header("💰 Transaction Cost Sensitivity Analysis")
-            
-             with st.spinner("Analyzing transaction costs..."):
-                  try:
-                      
-                      # Initialize cost analyzer
-                      cost_analyzer = TransactionCostAnalyzer(positions, prices, base_cost=transaction_cost)
+        if run_cost_analysis:
+            st.markdown("---")
+            st.header("💰 Transaction Cost Sensitivity Analysis")
+        
+            with st.spinner("Analyzing transaction costs..."):
+                try:
                     
-                      # Run sensitivity analysis
-                      cost_results = cost_analyzer.sensitivity_analysis(
-                          cost_levels=[i * 0.0005 for i in range(21)]  # 0 to 50 bps
-                      )
-                    
-                      # Key metrics
-                      st.subheader("Turnover Statistics")
-                      col1, col2, col3, col4 = st.columns(4)
-                    
-                      turnover_stats = cost_results.turnover_analysis.iloc[0]
-                      col1.metric("Annual Turnover", f"{turnover_stats['Annualized Turnover']:.2f}")
-                      col2.metric("Avg Daily Turnover", f"{turnover_stats['Average Daily Turnover']:.4f}")
-                      col3.metric("Trading Frequency", f"{turnover_stats['Trading Frequency']:.2%}")
-                      col4.metric("Breakeven Cost", f"{cost_results.breakeven_cost*10000:.1f} bps")
-                    
-                      # Cost sensitivity chart
-                      st.subheader("Performance vs Transaction Costs")
-                      fig_sensitivity = Visualizer.plot_cost_sensitivity(cost_results.cost_scenarios)
-                      st.plotly_chart(fig_sensitivity, use_container_width=True)
-                    
-                      # Costs over time
-                      st.subheader("Transaction Costs Over Time")
-                      fig_turnover = Visualizer.plot_turnover_over_time(cost_results.cost_impact)
-                      st.plotly_chart(fig_turnover, use_container_width=True)
-                    
-                      # Detailed analysis tabs
-                      st.subheader("Detailed Cost Analysis")
-                      cost_tab1, cost_tab2, cost_tab3 = st.tabs([
-                          "Rebalancing Frequency", 
-                          "Cost by Asset", 
-                          "Slippage Impact"
-                      ])
-                    
-                      with cost_tab1:
-                          st.markdown("### Optimal Rebalancing Frequency")
-                          st.info("Testing different rebalancing frequencies to balance costs vs tracking error...")
-                        
-                          rebal_df = cost_analyzer.optimal_rebalancing_frequency(
-                               frequencies=[1, 5, 10, 20, 40, 60]
-                          )
-                        
-                          fig_rebal = Visualizer.plot_rebalancing_frequency_analysis(rebal_df)
-                          st.plotly_chart(fig_rebal, use_container_width=True)
-                        
-                          st.dataframe(rebal_df, use_container_width=True)
-                        
-                          # Recommendation
-                          best_freq = rebal_df.loc[rebal_df['Sharpe_Ratio'].idxmax(), 'Rebalance_Frequency']
-                          st.success(f"💡 **Recommendation**: Based on Sharpe ratio, optimal frequency is **{best_freq}**")
-
-                      with cost_tab2:
-                          st.markdown("### Transaction Costs by Asset")
-                        
-                          breakdown = cost_analyzer.cost_breakdown_by_asset()
-                        
-
-                          fig_breakdown = Visualizer.plot_cost_breakdown_by_asset(breakdown, top_n=10)
-                          st.plotly_chart(fig_breakdown, use_container_width=True)
-                        
-                          st.dataframe(breakdown, use_container_width=True)
-
-                      with cost_tab3:
-                          st.markdown("### Market Impact & Slippage Analysis")
-                          st.info("Estimating impact of market impact costs beyond fixed transaction fees...")
-                        
-                          slippage_df = cost_analyzer.slippage_impact_analysis(
-                              slippage_levels=[0, 0.5, 1.0, 1.5, 2.0]
-                          )
-                        
-                          st.dataframe(slippage_df, use_container_width=True)
-                        
-                          st.warning("""
-                          **Note**: Market impact typically increases with trade size. Larger position changes 
-                          experience more slippage. This analysis shows how returns degrade with increasing 
-                          market impact costs.
-                          """)
-                    
-                      # Cost efficiency threshold
-                      with st.expander("🔍 Minimum Trade Threshold Analysis"):
-                          st.markdown("### Impact of Trade Size Thresholds")
-                          st.info("Testing minimum position change thresholds to reduce unnecessary rebalancing...")
-                        
-                          threshold_df = cost_analyzer.cost_efficient_threshold(
-                              threshold_values=[0, 0.01, 0.02, 0.05, 0.10]
-                          )
-                        
-                          st.dataframe(threshold_df, use_container_width=True)
-                        
-                          # Find optimal threshold
-                          optimal_idx = threshold_df['Annual_Return'].idxmax()
-                          optimal_threshold = threshold_df.loc[optimal_idx, 'Threshold_Pct']
-                          st.success(f"💡 **Optimal Threshold**: {optimal_threshold:.1f}% minimizes costs while maintaining returns")
+                    # Initialize cost analyzer
+                    cost_analyzer = TransactionCostAnalyzer(positions, prices, base_cost=transaction_cost)
                 
-                  except Exception as e:
-                      st.error(f"❌ Error in transaction cost analysis: {str(e)}")
-                      st.exception(e)
+                    # Run sensitivity analysis
+                    cost_results = cost_analyzer.sensitivity_analysis(
+                        cost_levels=[i * 0.0005 for i in range(21)]  # 0 to 50 bps
+                    )
+                
+                    # Key metrics
+                    st.subheader("Turnover Statistics")
+                    col1, col2, col3, col4 = st.columns(4)
+                
+                    turnover_stats = cost_results.turnover_analysis.iloc[0]
+                    col1.metric("Annual Turnover", f"{turnover_stats['Annualized Turnover']:.2f}")
+                    col2.metric("Avg Daily Turnover", f"{turnover_stats['Average Daily Turnover']:.4f}")
+                    col3.metric("Trading Frequency", f"{turnover_stats['Trading Frequency']:.2%}")
+                    col4.metric("Breakeven Cost", f"{cost_results.breakeven_cost*10000:.1f} bps")
+                
+                    # Cost sensitivity chart
+                    st.subheader("Performance vs Transaction Costs")
+                    fig_sensitivity = Visualizer.plot_cost_sensitivity(cost_results.cost_scenarios)
+                    st.plotly_chart(fig_sensitivity, use_container_width=True)
+                
+                    # Costs over time
+                    st.subheader("Transaction Costs Over Time")
+                    fig_turnover = Visualizer.plot_turnover_over_time(cost_results.cost_impact)
+                    st.plotly_chart(fig_turnover, use_container_width=True)
+                
+                    # Detailed analysis tabs
+                    st.subheader("Detailed Cost Analysis")
+                    cost_tab1, cost_tab2, cost_tab3 = st.tabs([
+                        "Rebalancing Frequency", 
+                        "Cost by Asset", 
+                        "Slippage Impact"
+                    ])
+                
+                    with cost_tab1:
+                        st.markdown("### Optimal Rebalancing Frequency")
+                        st.info("Testing different rebalancing frequencies to balance costs vs tracking error...")
+                    
+                        rebal_df = cost_analyzer.optimal_rebalancing_frequency(
+                            frequencies=[1, 5, 10, 20, 40, 60]
+                        )
+                    
+                        fig_rebal = Visualizer.plot_rebalancing_frequency_analysis(rebal_df)
+                        st.plotly_chart(fig_rebal, use_container_width=True)
+                    
+                        st.dataframe(rebal_df, use_container_width=True)
+                    
+                        # Recommendation
+                        best_freq = rebal_df.loc[rebal_df['Sharpe_Ratio'].idxmax(), 'Rebalance_Frequency']
+                        st.success(f"💡 **Recommendation**: Based on Sharpe ratio, optimal frequency is **{best_freq}**")
+
+                    with cost_tab2:
+                        st.markdown("### Transaction Costs by Asset")
+                    
+                        breakdown = cost_analyzer.cost_breakdown_by_asset()
+                    
+
+                        fig_breakdown = Visualizer.plot_cost_breakdown_by_asset(breakdown, top_n=10)
+                        st.plotly_chart(fig_breakdown, use_container_width=True)
+                    
+                        st.dataframe(breakdown, use_container_width=True)
+
+                    with cost_tab3:
+                        st.markdown("### Market Impact & Slippage Analysis")
+                        st.info("Estimating impact of market impact costs beyond fixed transaction fees...")
+                    
+                        slippage_df = cost_analyzer.slippage_impact_analysis(
+                            slippage_levels=[0, 0.5, 1.0, 1.5, 2.0]
+                        )
+                    
+                        st.dataframe(slippage_df, use_container_width=True)
+                    
+                        st.warning("""
+                        **Note**: Market impact typically increases with trade size. Larger position changes 
+                        experience more slippage. This analysis shows how returns degrade with increasing 
+                        market impact costs.
+                        """)
+                
+                    # Cost efficiency threshold
+                    with st.expander("🔍 Minimum Trade Threshold Analysis"):
+                        st.markdown("### Impact of Trade Size Thresholds")
+                        st.info("Testing minimum position change thresholds to reduce unnecessary rebalancing...")
+                    
+                        threshold_df = cost_analyzer.cost_efficient_threshold(
+                            threshold_values=[0, 0.01, 0.02, 0.05, 0.10]
+                        )
+                    
+                        st.dataframe(threshold_df, use_container_width=True)
+                    
+                        # Find optimal threshold
+                        optimal_idx = threshold_df['Annual_Return'].idxmax()
+                        optimal_threshold = threshold_df.loc[optimal_idx, 'Threshold_Pct']
+                        st.success(f"💡 **Optimal Threshold**: {optimal_threshold:.1f}% minimizes costs while maintaining returns")
+            
+                except Exception as e:
+                    st.error(f"❌ Error in transaction cost analysis: {str(e)}")
+                    st.exception(e)
         
         # ====================================================================
         # DOWNLOAD RESULTS SECTION
