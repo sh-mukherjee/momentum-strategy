@@ -170,11 +170,11 @@ if run_monte_carlo:
     )
 
 # Advanced Analysis - DISABLED BY DEFAULT
-st.sidebar.markdown("---")
-st.sidebar.subheader("📊 Advanced Analysis")
+#st.sidebar.markdown("---")
+#st.sidebar.subheader("📊 Advanced Analysis")
 
-run_factor_analysis = st.sidebar.checkbox("Factor Exposure Analysis", value=False)
-run_cost_analysis = st.sidebar.checkbox("Transaction Cost Analysis", value=False)
+#run_factor_analysis = st.sidebar.checkbox("Factor Exposure Analysis", value=False)
+#run_cost_analysis = st.sidebar.checkbox("Transaction Cost Analysis", value=False)
 
 # ============================================================================
 # RUN BACKTEST BUTTON
